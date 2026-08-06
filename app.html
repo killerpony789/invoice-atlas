@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>InvoiceAtlas</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <main>
+    <header>
+      <img src="icons/icon48.png" alt="" width="40" height="40">
+      <div>
+        <h1>InvoiceAtlas</h1>
+        <p class="sub">Amazon-Rechnungen gesammelt laden und zu einer PDF binden</p>
+      </div>
+    </header>
+
+    <section class="card" id="controls">
+      <div class="row">
+        <label for="year">Zeitraum</label>
+        <select id="year"></select>
+      </div>
+      <div class="row">
+        <label class="check">
+          <input type="checkbox" id="singles">
+          Einzel-PDFs zusätzlich speichern (GoBD-Schema: <code>JJJJ-MM-TT_Bestellnr_Betrag.pdf</code>)
+        </label>
+      </div>
+      <div class="row buttons">
+        <button id="run" class="primary">Rechnungen sammeln</button>
+        <button id="cancel" hidden>Abbrechen</button>
+      </div>
+      <p class="hint">Voraussetzung: Du bist in diesem Chrome-Profil bei
+        <a href="https://www.amazon.de/your-orders/orders" target="_blank" rel="noopener">amazon.de</a> eingeloggt.
+        Alles läuft lokal in deinem Browser – nichts verlässt deinen Rechner.</p>
+    </section>
+
+    <section class="card" id="progress" hidden>
+      <div id="status">Bereit.</div>
+      <div class="barwrap"><div id="bar"></div></div>
+      <div id="log"></div>
+    </section>
+
+    <section class="card result" id="result" hidden>
+      <h2 id="result-title"></h2>
+      <p id="result-stats"></p>
+      <button id="download" class="primary"></button>
+      <details id="skipped-box" hidden>
+        <summary></summary>
+        <ul id="skipped-list"></ul>
+      </details>
+    </section>
+
+    <footer>
+      <p>InvoiceAtlas läuft komplett lokal. Kein Server. Kein Tracking.</p>
+    </footer>
+  </main>
+
+  <script src="vendor/pdf-lib.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

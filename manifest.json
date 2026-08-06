@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "InvoiceAtlas",
+  "version": "0.1.0",
+  "description": "Amazon Rechnungen gesammelt herunterladen und zu einer PDF gebündelt – mit Inhaltsverzeichnis. Läuft komplett lokal.",
+  "action": {
+    "default_title": "InvoiceAtlas öffnen"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "host_permissions": [
+    "https://*.amazon.de/*",
+    "https://s3.amazonaws.com/*",
+    "https://*.s3.amazonaws.com/*",
+    "https://*.media-amazon.com/*"
+  ]
+}
