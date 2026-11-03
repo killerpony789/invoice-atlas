@@ -23,7 +23,6 @@ const RE_ORDER_ID = /\b((?:[A-Z]\d{2}|\d{3})-\d{7}-\d{7})\b/;
 const RE_DATE = /(\d{1,2})\.\s*(Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember)\s+(\d{4})/i;
 const RE_AMOUNT = /(?:EUR\s*)?(\d{1,3}(?:\.\d{3})*),(\d{2})(?:\s*€)?/;
 const RE_POPOVER = /(?:href="|"url"\s*:\s*")([^"]*(?:invoice\.html|invoice\/popover)\?[^"]*)"/;
-const RE_NEXT_PAGE = /class="[^"]*a-last[^"]*"[^>]*>\s*<a[^>]+href="([^"]+)"/;
 const RE_ANCHOR_TAGS = /<a[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g;
 
 function decodeEntities(s) {
@@ -50,7 +49,7 @@ function parseAmountCents(text) {
   return m ? Number(m[1].replace(/\./g, '')) * 100 + Number(m[2]) : null;
 }
 
-/** Zerlegt eine Bestellhistorien-Seite in Bestellungen + Link auf die nächste Seite. */
+/** Zerlegt eine Bestellhistorien-Seite in ihre Bestellungen. */
 function parseOrderPage(html) {
   const orders = [];
   const cards = html.split(/class="[^"]*\border-card\b/).slice(1);
@@ -74,13 +73,7 @@ function parseOrderPage(html) {
       cancelled: totalCents === null && /\bstorniert\b/i.test(card),
     });
   }
-  let nextStartIndex = null;
-  const next = RE_NEXT_PAGE.exec(html);
-  if (next) {
-    const idx = /startIndex=(\d+)/.exec(decodeEntities(next[1]));
-    if (idx) nextStartIndex = Number(idx[1]);
-  }
-  return { orders, nextStartIndex };
+  return orders;
 }
 
 const RE_ASIN = /\/(?:dp|gp\/product|gp\/aw\/d)\/([A-Z0-9]{10})/;
@@ -199,22 +192,27 @@ function fitText(text, font, size, maxWidth) {
 // Sammellauf
 // ---------------------------------------------------------------------------
 
+/** Blättert per startIndex weiter, bis eine Seite keine NEUEN Bestellungen
+ * mehr liefert – bewusst ohne den „Weiter"-Link zu parsen, dessen Markup
+ * Amazon ändern kann (hat es zwischen 08/2026 und 11/2026 getan: Ergebnis
+ * war Abbruch nach Seite 1 = 10 Bestellungen). */
 async function collectOrders(year) {
   const all = new Map();
   let startIndex = 0;
-  const seenIndexes = new Set();
-  let page = 0;
-  while (startIndex !== null && !seenIndexes.has(startIndex) && page < 200) {
+  let pageSize = null;
+  for (let page = 1; page <= 200; page++) {
     if (state.cancelled) throw new Error('CANCELLED');
-    seenIndexes.add(startIndex);
-    page++;
     setStatus(`Durchsuche Bestellungen – Seite ${page} …`);
     const url = `${BASE}/your-orders/orders?timeFilter=year-${year}&startIndex=${startIndex}&disableCsd=no-js`;
-    const { orders, nextStartIndex } = parseOrderPage(await fetchText(url));
+    const orders = parseOrderPage(await fetchText(url));
+    const before = all.size;
     for (const o of orders) if (!all.has(o.orderId)) all.set(o.orderId, o);
-    log(`Seite ${page}: ${orders.length} Bestellungen`);
-    startIndex = nextStartIndex;
-    if (startIndex !== null) await sleep(DELAY_MS);
+    const added = all.size - before;
+    log(`Seite ${page}: ${orders.length} Bestellungen${added < orders.length ? ` (${added} neu)` : ''}`);
+    if (added === 0) break; // leere Seite oder nur Wiederholungen: Ende erreicht
+    pageSize = pageSize ?? orders.length;
+    startIndex += pageSize;
+    await sleep(DELAY_MS);
   }
   return [...all.values()];
 }

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "InvoiceAtlas",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Amazon Rechnungen gesammelt herunterladen und zu einer PDF gebündelt – mit Inhaltsverzeichnis. Läuft komplett lokal.",
   "action": {
     "default_title": "InvoiceAtlas öffnen"
