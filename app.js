@@ -29,7 +29,7 @@ function decodeEntities(s) {
   return s
     .replace(/&nbsp;/g, ' ')
     .replace(/&quot;|&#34;/g, '"')
-    .replace(/&#39;/g, "'")
+    .replace(/&#39;|&#x27;/gi, "'")
     .replace(/&amp;/g, '&');
 }
 
